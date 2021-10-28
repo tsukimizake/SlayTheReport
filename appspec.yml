@@ -2,11 +2,11 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ubuntu/SlayTheReport
+    destination: ~/SlayTheReport
 file_exists_behavior: OVERWRITE
 
 permissions:
-  - object: /home/ubuntu/SlayTheReport
+  - object: ~/SlayTheReport
     pattern: "**"
     owner: ubuntu
 

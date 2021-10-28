@@ -3,7 +3,7 @@ services:
   sinatra:
     build: .
     volumes:
-      - /home/ubuntu/SlayTheReport/app:/app
+      - ~/SlayTheReport/app:/app
     working_dir: /app
     command: bash start.sh
     ports:
