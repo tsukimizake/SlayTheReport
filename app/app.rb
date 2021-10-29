@@ -9,10 +9,10 @@ require 'oauth'
 
 also_reload File.dirname(__FILE__) + "/floor.rb"
 also_reload File.dirname(__FILE__) + "/image.rb"
-also_reload File.dirname(__FILE__) + "/keymanager.rb"
+also_reload File.dirname(__FILE__) + "/envmanager.rb"
 
 require_relative './floor'
-require_relative './keymanager'
+require_relative './envmanager'
 
 configure do
   use Rack::Session::Cookie
@@ -25,8 +25,8 @@ end
 
 def oauth
   OAuth::Consumer.new(
-    $Key['TwitterAPIKey'],
-    $Key['TwitterAPIKeySecret'],
+    $Env['TwitterAPIKey'],
+    $Env['TwitterAPIKeySecret'],
     :site => 'https://api.twitter.com',
     :schema => :header,
     :method => :post,
