@@ -20,7 +20,7 @@ require_relative './connector_mock'
 
 $stdout.sync = true
 
-ddb, $twitter_service =
+ddb, twitter_service =
   case ENV['DB_MODE']
   when 'staging'
     [RunDataService.new(DDBGenerator.run(:staging)), TwitterService.new]
@@ -41,24 +41,24 @@ helpers do
   def h(text)
     Rack::Utils.escape_html(text)
   end
-end
 
-def oauth
-  key, secret = $twitter_service.get_api_keys
-  OAuth::Consumer.new(
-    key,
-    secret,
-    site: 'https://api.twitter.com',
-    schema: :header,
-    method: :post,
-    request_token_path: '/oauth/request_token',
-    access_token_path: '/oauth/access_token',
-    authorize_path: '/oauth/authorize'
-  )
+  def oauth
+    key, secret = twitter_service.get_api_keys
+    OAuth::Consumer.new(
+      key,
+      secret,
+      site: 'https://api.twitter.com',
+      schema: :header,
+      method: :post,
+      request_token_path: '/oauth/request_token',
+      access_token_path: '/oauth/access_token',
+      authorize_path: '/oauth/authorize'
+    )
+  end
 end
 
 get '/' do
-  @twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  @twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
   @reports = ddb.query_all
   erb :index
 end
@@ -79,7 +79,7 @@ get '/auth2' do
 end
 
 get '/mypage' do
-  @twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  @twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
   @reports = ddb.query_by_author(@twitter.user.screen_name)
   erb :mypage
 end
@@ -90,13 +90,13 @@ post '/mypage/newreport' do
   redirect '/mypage' if File.size(params[:runfile][:tempfile]) >= (30 * 1000)
 
   runfile = File.read(params[:runfile][:tempfile])
-  twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
   begin
     ddb.put_item(twitter.user.screen_name, params[:runfile][:filename], runfile, Run.new(runfile))
-  rescue JSON::ParserError => ex
+  rescue JSON::ParserError => e
     # パースできないJSONは無視する
     # Todo: 何かメッセージを出すべきである
-  rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException => ex
+  rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException => e
     # 同一ファイルの重複登録は無視する
     # Todo: 何かメッセージを出すべきである
   end
@@ -105,7 +105,7 @@ end
 
 get '/mypage/edit/:run_id' do |run_id|
   @is_edit_mode = true
-  @twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  @twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
   @runid = run_id
   @report = ddb.get_item(
     @twitter.user.screen_name,
@@ -115,7 +115,7 @@ get '/mypage/edit/:run_id' do |run_id|
 end
 
 post '/mypage/edit/:run_id' do |run_id|
-  @twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  @twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
 
   floor_comments = params.keys.filter { |k| k.start_with?('report_') }.sort.map do |key|
     params[key]
@@ -151,13 +151,13 @@ post '/mypage/edit/:run_id' do |run_id|
 end
 
 post '/mypage/delete/:run_id' do |run_id|
-  @twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  @twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
   ddb.delete_item(@twitter.user.screen_name, run_id)
   redirect '/mypage'
 end
 
 get '/report/:player_id/:run_id' do |player_id, run_id|
-  @twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  @twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
   @player = player_id
   @runid = run_id
   @report = ddb.get_item(
@@ -172,7 +172,7 @@ get '/report/:player_id/:run_id' do |player_id, run_id|
 end
 
 get '/help' do
-  @twitter = $twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
+  @twitter = twitter_service.token_authenticate(session[:twitter_token], session[:twitter_secret])
   erb :help
 end
 get '/debug' do
