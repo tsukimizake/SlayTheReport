@@ -33,7 +33,7 @@ ddb, ddb_author, $twitter_service, salt =
      TwitterService.new,
      SaltService.salt]
   when 'local'
-    [RunDataService.new([Aws::DynamoDB::Client.new(endpoint: 'http://dynamodb:8000', region: 'ap-northeast-1', access_key_id: 'fakeid', secret_access_key: 'fakekey'), 'SlayTheReport']),
+    [RunDataService.new(Aws::DynamoDB::Client.new(endpoint: 'http://dynamodb:8000', region: 'ap-northeast-1', access_key_id: 'fakeid', secret_access_key: 'fakekey'), 'SlayTheReport'),
      'dummy',
      TwitterServiceMock.new,
      'salt']
